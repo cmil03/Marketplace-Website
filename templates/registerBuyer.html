@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Full Stack App</title>
+	<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+	<header>
+		<h1><u>Buyer Registration Page</u></h1>
+	</header>
+
+
+	<form method="POST" action="/process-buyer-registration">
+		Email Address:
+		<input type="text" name="userid" required><br>
+		Password:
+		<input type="password" name="password" required><br>
+		Confirm Password:
+		<input type="password" name="confirm-password" required><br>
+		<!-- Do we really need a business name for a buyer -->
+        Business Name:
+		<input type="text" name="business-name" required><br>
+		<pr>Enter “N/A” in the Business field if it is not applicable.</pr>
+        <!-- Street Number:
+		<input type="text" name="street-num" required><br>
+		Street Name:
+		<input type="text" name="street-name" required><br> -->
+		<Address>Test</Address>
+        Address:
+        <input type="text" name="address" required><br>
+        City:
+		<input type="text" name="city" required><br>
+		State:
+		<input type="text" name="state" required><br>
+		Zip Code:
+		<input type="text" name="zipcode" required><br>
+		<input type="submit" value="Register"><br>
+	</form>
+
+</body>
+
+</html>

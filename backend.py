@@ -104,14 +104,90 @@ def registration():
 
     return render_template('registration.html')
 
+@database.route('/registerBuyer', methods = ['GET', 'POST'])
+def register_buyer():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    conn.close()
+    return render_template('registerBuyer.html')
+
+@database.route('/process-buyer-registration', methods = ['POST'])
+def process_buyer_registration():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    hashed_password = hash(request.form['password'])
+    hashed_password = str(hashed_password)       
+ 
+    hashed_password2 = hash(request.form['confirm-password'])
+    hashed_password2 = str(hashed_password2)       
+ 
+    if hashed_password == hashed_password2:
+        # Must update Users, Buyers, Address, and ZipCode tables
+        # Query Users to find if the provided username already exists
+        username = request.form['userid'] 
+        cursor.execute(f"SELECT COUNT(*) FROM Users WHERE email = '" + username + "'")
+        rows = cursor.fetchall()
+        if rows[0][0] >= 1: # username already exists
+            conn.close()
+            return render_template('register-buyer-with-user-alert.html')
+
+        cursor.execute(f"INSERT INTO Users (email, password) VALUES ('{username}', '{hashed_password}')") # add username into Users and Buyers tables
+        conn.commit()
+
+        # Load rest of fields
+        business_name = request.form['business-name']
+        # street_num = request.form['street-num']
+        # street_name = request.form['street-name']
+        address = request.form['address']
+        city = request.form['city']
+        state = request.form['state']
+        zip_code = request.form['zipcode']
+
+        # Check if the provided zip code already exists
+        cursor.execute(f"SELECT COUNT(*) FROM Zipcode_Info WHERE zipcode = '{zip_code}'")
+        rows = cursor.fetchall()
+        if rows[0][0] == 0: # zipcode doesn't exist
+            # Add the new zipcode to Zipcode
+            cursor.execute(f"INSERT INTO Zipcode_Info (zipcode, city, state) VALUES ('{zip_code}', '{city}', '{state}')")  # add address to table
+            conn.commit()
+
+        # Check if the provided address is already in Address
+        cursor.execute(f"SELECT COUNT(*) FROM Address WHERE zipcode = '{zip_code}' AND address = '{address}'")
+        rows = cursor.fetchall()
+        if rows[0][0] >= 1:  # address already exists
+            cursor.execute(f"SELECT address_ID FROM Address WHERE zipcode = '{zip_code}' AND address = '{address}'")
+            rows = cursor.fetchall()
+            address_id = rows[0][0]
+        else: # generate random address id
+            # id's must be unique
+            address_id = random.randint(0, 100000000)
+            # Add the new address to Address if it does not already exist
+            cursor.execute(f"INSERT INTO Address (address_ID, zipcode, address) VALUES ('{address_id}', '{zip_code}', '{address}')")  # add address to table
+            conn.commit()
+        print("New address ID: ", address_id)
+
+        # Add the new user to Buyers
+        cursor.execute(f"INSERT INTO Buyers (email, business_name, buyer_address_id) VALUES ('{username}', '{business_name}', '{address_id}')")  # add username into Users and Buyers tables
+        conn.commit()
+
+        conn.close()
+        return render_template('buyerRegSuccess.html')
+    else:
+        conn.close()
+        return render_template('register-buyer-with-password-alert.html')
 
 
+@database.route('/buyerRegSuccess', methods = ['Get', 'Post'])
+def buyerRegSuccess():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor
 
-
-
-
-
-
+    render_template('buyerRegSuccess.html')
 
 if __name__=="__main__":
     #app.run(host='0.0.0.0', port=8080)
