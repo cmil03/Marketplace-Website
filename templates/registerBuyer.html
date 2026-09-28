@@ -12,7 +12,10 @@
 	<header>
 		<h1><u>Buyer Registration Page</u></h1>
 	</header>
-
+	{% if result %}
+		<h2>Alert!</h2>
+		<p>{{ result }}</p>
+	{% endif %}
 
 	<form method="POST" action="/process-buyer-registration">
 		Email Address:

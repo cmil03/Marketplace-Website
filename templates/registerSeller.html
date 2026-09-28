@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Nittany Business</title>
+	<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+	<header>
+		<h1><u>Nittany Business Application</u></h1>
+	</header>
+
+	<h3>Seller Registration Page</h3>
+
+	{% if result %}
+		<h2>Alert!</h2>
+		<p>{{ result }}</p>
+	{% endif %}
+
+	<form method="POST" action="/process-seller-registration">
+		Email Address:
+		<input type="text" name="userid" required><br>
+		Password:
+		<input type="password" name="password" required><br>
+		Confirm Password:
+		<input type="password" name="confirm-password" required><br>
+		Business Name:
+		<input type="text" name="business-name" required><br>
+        Address
+        <input type="text" name="address" required> <br>
+		City:
+		<input type="text" name="city" required><br>
+		State (Two Letter Abbreviation):
+		<input type="text" name="state" required><br>
+		Zip Code:
+		<input type="text" name="zipcode" required><br>
+		Bank Routing Number:
+		<input type="text" name="bank-routing-number" required><br>
+		Bank Account Number:
+		<input type="text" name="bank-account-number" required><br>
+		<input type="submit" value="Register"><br>
+	</form>
+</body>
+
+</html>
