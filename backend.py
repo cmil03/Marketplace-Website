@@ -196,27 +196,27 @@ def buyerRegSuccess():
 
 
 
-@database.route('/register-seller', methods = ['GET', 'POST'])
-def register_seller():
-    db_file = 'nittanybusiness.db'
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
+# @database.route('/register-seller', methods = ['GET', 'POST'])
+# def register_seller():
+#     db_file = 'nittanybusiness.db'
+#     conn = sqlite3.connect(db_file)
+#     cursor = conn.cursor()
 
-    conn.close()
-    return render_template('register-seller.html')
+#     conn.close()
+#     return render_template('register-seller.html')
 
 
-@database.route('/registerBuyer', methods = ['GET', 'POST'])
-def register_buyer():
+@database.route('/registerSeller', methods = ['GET', 'POST'])
+def registerSeller():
     db_file = 'database.db'
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
 
     conn.close()
-    return render_template('registerBuyer.html')
+    return render_template('registerSeller.html')
 
 @database.route('/process-seller-registration', methods = ['POST'])
-def process_buyer_registration():
+def process_seller_registration():
     db_file = 'database.db'
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
@@ -250,6 +250,8 @@ def process_buyer_registration():
         city = request.form['city']
         state = request.form['state']
         zip_code = request.form['zipcode']
+        bankroutingnumber = request.form['bank-routing-number']
+        bankaccountnumber = request.form['bank-account-number']
 
         # Check if the provided zip code already exists
         cursor.execute(f"SELECT COUNT(*) FROM Zipcode_Info WHERE zipcode = '{zip_code}'")
@@ -281,7 +283,7 @@ def process_buyer_registration():
         print("New address ID: ", address_id)
 
         # Add the new user to Buyers
-        cursor.execute(f"INSERT INTO Sellers (email, business_name, buyer_address_id) VALUES ('{username}', '{business_name}', '{address_id}')")  # add username into Users and Buyers tables
+        cursor.execute(f"INSERT INTO Sellers (email, business_name, buyer_address_id, bank_routing_number, bank_account_number) VALUES ('{username}', '{business_name}', '{address_id}','{bankroutingnumber}','{bankaccountnumber}')")  # add username into Users and Buyers tables
         conn.commit()
 
         conn.close()
@@ -289,7 +291,7 @@ def process_buyer_registration():
     else:
         conn.close()
         result = "Registration Failed! Passwords not match."
-        return render_template('registerSeller.html', result)
+        return render_template('registerSeller.html', result = result)
 
 
 if __name__=="__main__":
