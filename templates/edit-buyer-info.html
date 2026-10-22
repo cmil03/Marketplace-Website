@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Full Stack App</title>
+	<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <header>
+        <h1>Edit Buyer Information</h1>
+    </header>
+    <p>Only input information in the fields you want to change.</p>
+    <form method="POST" action="/Update-Buyer-Information">
+		<!-- Do we really need a business name for a buyer -->
+        Business Name:
+		<input type="text" name="business-name" required><br>
+		<p>Enter “N/A” in the Business field if it is not applicable.</p>
+        <!-- Street Number:
+		<input type="text" name="street-num" required><br>
+		Street Name:
+		<input type="text" name="street-name" required><br> -->
+		<!-- <Address>Test</Address> -->
+        Address:
+        <!-- <input type="text" name="address" required><br> -->
+		 <input type="text" name="address"><br>
+        City:
+		<input type="text" name="city"><br>
+		State:
+		<input type="text" name="state"><br>
+		Zip Code:
+		<input type="text" name="zipcode"><br>
+		<input type="submit" value="Register"><br>
+	</form>
+</body>
+</html>

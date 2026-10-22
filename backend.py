@@ -27,6 +27,27 @@ def hash(password):
     encrypted = hashlib.sha256(password.encode()).hexdigest()
     return encrypted
 
+def get_or_create_address(conn, zip_code, address):
+    cursor = conn.cursor()
+    conn.execute("BEGIN IMMEDIATE")
+    cursor.execute(
+        "SELECT address_id FROM Address WHERE zipcode = ? AND address = ?",
+        (zip_code, address),
+    )
+    existing_address = cursor.fetchone()
+    if existing_address is not None:
+        conn.commit()
+        return existing_address[0]
+
+    cursor.execute("SELECT COALESCE(MAX(CAST(address_id AS INTEGER)), 0) + 1 FROM Address")
+    address_id = cursor.fetchone()[0]
+    cursor.execute(
+        "INSERT INTO Address (address_id, zipcode, address) VALUES (?, ?, ?)",
+        (address_id, zip_code, address),
+    )
+    conn.commit()
+    return address_id
+
 def main():
     pass
 
@@ -157,19 +178,7 @@ def process_buyer_registration():
             cursor.execute(f"INSERT INTO Zipcode_Info (zipcode, city, state) VALUES ('{zip_code}', '{city}', '{state}')")  # add address to table
             conn.commit()
 
-        # Check if the provided address is already in Address
-        cursor.execute(f"SELECT COUNT(*) FROM Address WHERE zipcode = '{zip_code}' AND address = '{address}'")
-        rows = cursor.fetchall()
-        if rows[0][0] >= 1:  # address already exists
-            cursor.execute(f"SELECT address_ID FROM Address WHERE zipcode = '{zip_code}' AND address = '{address}'")
-            rows = cursor.fetchall()
-            address_id = rows[0][0]
-        else: # generate random address id
-            # id's must be unique
-            address_id = random.randint(0, 100000000)
-            # Add the new address to Address if it does not already exist
-            cursor.execute(f"INSERT INTO Address (address_ID, zipcode, address) VALUES ('{address_id}', '{zip_code}', '{address}')")  # add address to table
-            conn.commit()
+        address_id = get_or_create_address(conn, zip_code, address)
         print("New address ID: ", address_id)
 
         # Add the new user to Buyers
@@ -261,29 +270,11 @@ def process_seller_registration():
             cursor.execute(f"INSERT INTO Zipcode_Info (zipcode, city, state) VALUES ('{zip_code}', '{city}', '{state}')")  # add address to table
             conn.commit()
 
-        # Check if the provided address is already in Address
-        cursor.execute(f"SELECT COUNT(*) FROM Address WHERE zipcode = '{zip_code}' AND address = '{address}'")
-        rows = cursor.fetchall()
-        if rows[0][0] >= 1:  # address already exists
-            cursor.execute(f"SELECT address_ID FROM Address WHERE zipcode = '{zip_code}' AND address = '{address}'")
-            rows = cursor.fetchall()
-            address_id = rows[0][0]
-        else: # generate random address id
-            # id's must be unique
-            address_id = random.randint(0, 100000000)
-            cursor.execute(f"SELECT COUNT(*) FROM Address WHERE address_id = '{address_id}")
-            rows = cursor.fetchall
-            while rows[0][0] > 0:
-                address_id = random.randint(0, 100000000)
-                cursor.execute(f"SELECT COUNT(*) FROM Address WHERE address_id = '{address_id}")
-                rows = cursor.fetchall
-            # Add the new address to Address if it does not already exist
-            cursor.execute(f"INSERT INTO Address (address_ID, zipcode, address) VALUES ('{address_id}', '{zip_code}', '{address}')")  # add address to table
-            conn.commit()
+        address_id = get_or_create_address(conn, zip_code, address)
         print("New address ID: ", address_id)
 
         # Add the new user to Buyers
-        cursor.execute(f"INSERT INTO Sellers (email, business_name, buyer_address_id, bank_routing_number, bank_account_number) VALUES ('{username}', '{business_name}', '{address_id}','{bankroutingnumber}','{bankaccountnumber}')")  # add username into Users and Buyers tables
+        cursor.execute(f"INSERT INTO Sellers (email, business_name, Business_Address_ID, bank_routing_number, bank_account_number) VALUES ('{username}', '{business_name}', '{address_id}','{bankroutingnumber}','{bankaccountnumber}')")  # add username into Users and Buyers tables
         conn.commit()
 
         conn.close()
@@ -292,6 +283,118 @@ def process_seller_registration():
         conn.close()
         result = "Registration Failed! Passwords not match."
         return render_template('registerSeller.html', result = result)
+
+@database.route('/SellerRegSuccess', methods = ['Get', 'Post'])
+def SellerRegSuccess():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    render_template('SellerRegSuccess.html')
+
+
+
+# The above section is user registration
+# From here on, the code focuses on app functionality
+# Creating the main functionality of the website and so on
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# We will first focus on the buyers
+
+@database.route('/edit-buyer-info', methods = ['Get', 'Post'])
+def edit_buyer_information():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+
+    # email = current_user
+    # cursor.execute("SELECT * WHERE email == {email}")
+    # rows = cursor.fetchall()
+    # print(rows)
+
+    return render_template('edit-buyer-info.html')
+
+@database.route('/Update-Buyer-Information', methods = ["Get", "Post"])
+def Update_Buyer_Information():
+    # The only information that users will be able to edit here will be:
+    # Business Name, Address, City, State, 
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    user = current_user
+    business_name = False
+    Address = False
+    City = False
+    State = False
+    Zipcode = False
+
+    if request.form.get("business-name"):
+        business_name = request.form.get("business-name")
+
+    if request.form.get("address"):
+        Address = request.form.get("address")
+
+    if request.form.get("city"):
+        City = request.form.get("city")
+    
+    if request.form.get("state"):
+        State = request.form.get("state")
+    
+    if request.form.get("zipcode"):
+        Zipcode = request.form.get("zipcode")
+
+    # cursor.execute(f"INSERT INTO Buyer (email, password) VALUES ('{username}', '{hashed_password}')") # add username into Users and Buyers tables
+    cursor.execute("SELECT * FROM Buyers WHERE email = ?", (user,))
+    rows = cursor.fetchall()
+    row = rows[0]
+    Address_id = row[2]
+
+    
+    # Consider making two forms 
+    # so we know whether we are updating the
+    # address or business name 
+    if business_name:
+        # Update the business name
+        # cursor.execute("SELECT * FROM Buyers WHERE business_name == ?", (business_name,))
+        # rows  = cursor.fetchall()
+        cursor.execute("REMOVE * FROM Buyers WHERE business_name == ?", (business_name,))
+        conn.commit()
+        cursor.execute("INSERT INTO Buyers (email,business_name,buyer_address_id) VALUES (?, ?, ?)", (user, business_name, Address_id))
+        conn.commit()
+    if Address:
+
+        # Update the address
+        if City:
+            if State:
+                if Zipcode:
+                    # cursor.execute("SELECT * FROM Address WHERE address_id = ?", (Address_id,))
+                    # row = cursor.fetchall()
+                    cursor.execute("REMOVE * FROM Address WHERE address_id = ?", (Address_id,))
+                    conn.commit()
+                    cursor.excute("INSERT INTO ADDRESS (address_id, zipcode, address) VALUES (?, ?, ?)", (Address_id, Zipcode, Address))
+                    conn.commit()
+
+
+
+
+
+    
+
+    # cursor.execute("INSERT (email, ) ")
+
+    # Mark the previous line as old
+    # Delete the old line
+    # Insert a new line
+
+
+    return render_template("buyerinfoupdated.html")
 
 
 if __name__=="__main__":
