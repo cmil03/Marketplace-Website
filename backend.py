@@ -397,6 +397,22 @@ def Update_Buyer_Information():
     return render_template("buyerinfoupdated.html")
 
 
+@database.route('/create-product', methods = ['Get', 'Post'])
+def product_creation():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor
+
+    Seller_email = current_user
+    category = request.form("category")
+    product_name = request.form('product_name')
+    Product_Description = request.form('Product_Description')
+    Quantity = request.form('Quantity')
+    price = request.form('Price')
+
+
+    return render_template('product_creation.html')
+
 if __name__=="__main__":
     #app.run(host='0.0.0.0', port=8080)
     database.run()

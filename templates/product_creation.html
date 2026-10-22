@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Full Stack App</title>
+	<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <header>Create Product</header>
+    <p>Welcome Sellers! Create your product listing here!</p>
+<!-- Category,Product_Title,
+ Product_Name,Product_Description,Quantity,Product_Price,Status -->
+    <form method="POST" action="/list-product">
+        Product Category
+        <input type='text' name = "Category" required><br>
+        Lister (Or Company Name)
+        <input type='text' name = "Lister/Company" required><br>
+        Product Name
+        <input type='text' name = "Product Name" required><br>
+        Product Description
+        <input type='text' name = "Product Description" required><br>
+        Quantity In Stock
+        <input type='text' name = "Quantity" required><br>
+        Product Price
+        <input type='text' name = "Price" required><br>
+    </form>
+</body>
+
+</html>
