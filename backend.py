@@ -292,7 +292,9 @@ def SellerRegSuccess():
 
     render_template('SellerRegSuccess.html')
 
-
+@database.route('/seller', methods = ['Get', 'Post'])
+def renderseller():
+    return render_template('seller.html')
 
 # The above section is user registration
 # From here on, the code focuses on app functionality
@@ -311,14 +313,35 @@ def edit_buyer_information():
     db_file = 'database.db'
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
+    result = False
+    address_id = False
+    bus_name = False
+    address = False
+    city = False
+    state = False
+    zipcode = False
+    cursor.execute("SELECT * FROM Buyer WHERE email = ?", (current_user,))
+    rows = cursor.fetchone()
+    if rows:
+        address_id = rows[2]
+        bus_name = rows[1]
+
+        cursor.execute("SELECT * FROM Address WHERE address_id = ?", (address_id,) )
+        addy_row = cursor.fetchone()
+
+        if addy_row:
+            address = addy_row[2]
+            city = addy_row[3]
+            state = addy_row[4]
+            zipcode = addy_row[1]
+
+            result = [bus_name, address, city, state, zipcode]
+
+    # Add in preview of information prior to change
+    # Only display the relevant info -- the business name and address
 
 
-    # email = current_user
-    # cursor.execute("SELECT * WHERE email == {email}")
-    # rows = cursor.fetchall()
-    # print(rows)
-
-    return render_template('edit-buyer-info.html')
+    return render_template('edit-buyer-info.html', result = result)
 
 @database.route('/Update-Buyer-Information', methods = ["Get", "Post"])
 def Update_Buyer_Information():
@@ -361,38 +384,26 @@ def Update_Buyer_Information():
     # so we know whether we are updating the
     # address or business name 
     if business_name:
-        # Update the business name
-        # cursor.execute("SELECT * FROM Buyers WHERE business_name == ?", (business_name,))
-        # rows  = cursor.fetchall()
-        cursor.execute("REMOVE * FROM Buyers WHERE business_name == ?", (business_name,))
-        conn.commit()
-        cursor.execute("INSERT INTO Buyers (email,business_name,buyer_address_id) VALUES (?, ?, ?)", (user, business_name, Address_id))
+        cursor.execute("UPDATE Buyers SET business_name = ? WHERE email = ?", (business_name, current_user,))
         conn.commit()
     if Address:
 
         # Update the address
+        # CONSIDER ALL EDGE CASES
         if City:
             if State:
                 if Zipcode:
-                    # cursor.execute("SELECT * FROM Address WHERE address_id = ?", (Address_id,))
-                    # row = cursor.fetchall()
-                    cursor.execute("REMOVE * FROM Address WHERE address_id = ?", (Address_id,))
+                    cursor.execute("UPDATE Address SET zipcode = ?,address = ?,city = ?,state = ?",(Zipcode,Address,City,State,))
                     conn.commit()
-                    cursor.excute("INSERT INTO ADDRESS (address_id, zipcode, address) VALUES (?, ?, ?)", (Address_id, Zipcode, Address))
+                else:
+                    cursor.execute("UPDATE Address SET address = ?,city = ?,state = ?",(Address,City,State,))
                     conn.commit()
-
-
-
-
-
-    
-
-    # cursor.execute("INSERT (email, ) ")
-
-    # Mark the previous line as old
-    # Delete the old line
-    # Insert a new line
-
+            else:
+                cursor.execute("UPDATE Address SET zipcode = ?,address = ?,city = ?",(Zipcode,Address,City,))
+                conn.commit()
+        else:
+            cursor.execute("UPDATE Address SET zipcode = ?,address = ?,city = ?,state = ?",(Zipcode,Address,City,State,))
+            conn.commit()
 
     return render_template("buyerinfoupdated.html")
 
@@ -401,17 +412,37 @@ def Update_Buyer_Information():
 def product_creation():
     db_file = 'database.db'
     conn = sqlite3.connect(db_file)
-    cursor = conn.cursor
-
-    Seller_email = current_user
-    category = request.form("category")
-    product_name = request.form('product_name')
-    Product_Description = request.form('Product_Description')
-    Quantity = request.form('Quantity')
-    price = request.form('Price')
+    cursor = conn.cursor()
 
 
     return render_template('product_creation.html')
+
+@database.route('/list-product', methods = ['Get', 'Post'])
+def listproduct():
+
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    Seller_email = current_user
+    category = request.form["Category"]
+    company_name = request.form["Lister/Company"]
+    product_name = request.form['Product Name']
+    product_Description = request.form['Product Description']
+    quantity = request.form['Quantity']
+    price = request.form['Price']
+    status = True
+
+    # Create listing ID
+    listing_ID = str(random.randint(100000,999999))
+    cursor.execute("SELECT COUNT(*) FROM Products WHERE Listing_ID = ?", (listing_ID,))
+    rows = cursor.fetchall()
+    # print(rows)
+    cursor.execute("INSERT INTO Products values (?,?,?,?,?,?,?,?,?)",
+                    (Seller_email, listing_ID, category, company_name, product_name, product_Description, quantity, price, status))
+    conn.commit()
+
+    return render_template('product_created_successfully.html')
 
 if __name__=="__main__":
     #app.run(host='0.0.0.0', port=8080)

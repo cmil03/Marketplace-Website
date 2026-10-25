@@ -12,6 +12,18 @@
     <header>
         <h1>Edit Buyer Information</h1>
     </header>
+	<!-- <p>Current Information</p> -->
+	{% if result %}
+		<h2>Current Information</h2>
+		<p>{{ result[0] }}</p>		<!-- Business name -->
+		<p>{{ result[1] }}</p>		<!-- Address -->
+		<p>{{ result[2] }}</p>		<!-- City -->
+		<p>{{ result[3] }}</p>		<!-- State -->
+		<p>{{ result[4] }}</p>		<!-- zipcode -->
+		<!-- Still need to add if mutable payment (changes to bank account/routing number) -->
+	{% endif %}
+
+
     <p>Only input information in the fields you want to change.</p>
     <form method="POST" action="/Update-Buyer-Information">
 		<!-- Do we really need a business name for a buyer -->
