@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Full Stack App</title>
+	<!-- <link href="style.css" rel="stylesheet" type="text/css" /> -->
+</head>
+
+<body>
+    <header>
+        <h1>Edit Seller Information</h1>
+    </header>
+	<a href="Seller_Homepage">Return to homepage</a>
+	<!-- <p>Current Information</p> -->
+	{% if result %}
+		<h2>Current Information</h2>
+		<p>{{ result[0] }}</p>		<!-- Business name -->
+		<p>{{ result[1] }}</p>		<!-- Address -->
+		<p>{{ result[2] }}</p>		<!-- City -->
+		<p>{{ result[3] }}</p>		<!-- State -->
+		<p>{{ result[4] }}</p>		<!-- zipcode -->
+		<!-- Still need to add if mutable payment (changes to bank account/routing number) -->
+	{% endif %}
+
+
+    <p>Only input information in the fields you want to change.</p>
+    <form method="POST" action="/Update-Seller-Information">
+		<!-- Do we really need a business name for a buyer -->
+        Business Name:
+		<input type="text" name="business-name"><br>
+		<p>Enter “N/A” in the Business field if it is not applicable.</p>
+        Address:
+		 <input type="text" name="address"><br>
+        City:
+		<input type="text" name="city"><br>
+		State:
+		<input type="text" name="state"><br>
+		Zip Code:
+		<input type="text" name="zipcode"><br>
+		<input type="submit" value="Register"><br>
+	</form>
+</body>
+</html>

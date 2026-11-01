@@ -27,7 +27,7 @@ def hash(password):
     encrypted = hashlib.sha256(password.encode()).hexdigest()
     return encrypted
 
-def get_or_create_address(conn, zip_code, address):
+def get_or_create_address(conn, zip_code, address, city, state):
     cursor = conn.cursor()
     conn.execute("BEGIN IMMEDIATE")
     cursor.execute(
@@ -42,8 +42,8 @@ def get_or_create_address(conn, zip_code, address):
     cursor.execute("SELECT COALESCE(MAX(CAST(address_id AS INTEGER)), 0) + 1 FROM Address")
     address_id = cursor.fetchone()[0]
     cursor.execute(
-        "INSERT INTO Address (address_id, zipcode, address) VALUES (?, ?, ?)",
-        (address_id, zip_code, address),
+        "INSERT INTO Address (address_id, zipcode, address, city, state) VALUES (?, ?, ?, ?, ?)",
+        (address_id, zip_code, address, city, state),
     )
     conn.commit()
     return address_id
@@ -178,7 +178,7 @@ def process_buyer_registration():
             cursor.execute(f"INSERT INTO Zipcode_Info (zipcode, city, state) VALUES ('{zip_code}', '{city}', '{state}')")  # add address to table
             conn.commit()
 
-        address_id = get_or_create_address(conn, zip_code, address)
+        address_id = get_or_create_address(conn, zip_code, address, city, state)
         print("New address ID: ", address_id)
 
         # Add the new user to Buyers
@@ -200,19 +200,6 @@ def buyerRegSuccess():
     cursor = conn.cursor
 
     render_template('buyerRegSuccess.html')
-
-
-
-
-
-# @database.route('/register-seller', methods = ['GET', 'POST'])
-# def register_seller():
-#     db_file = 'nittanybusiness.db'
-#     conn = sqlite3.connect(db_file)
-#     cursor = conn.cursor()
-
-#     conn.close()
-#     return render_template('register-seller.html')
 
 
 @database.route('/registerSeller', methods = ['GET', 'POST'])
@@ -270,7 +257,7 @@ def process_seller_registration():
             cursor.execute(f"INSERT INTO Zipcode_Info (zipcode, city, state) VALUES ('{zip_code}', '{city}', '{state}')")  # add address to table
             conn.commit()
 
-        address_id = get_or_create_address(conn, zip_code, address)
+        address_id = get_or_create_address(conn, zip_code, address, city, state)
         print("New address ID: ", address_id)
 
         # Add the new user to Buyers
@@ -306,6 +293,27 @@ def renderseller():
 # --------------------------------------------------------------- 
 # ---------------------------------------------------------------
 # --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
+# --------------------------------------------------------------- 
+# ---------------------------------------------------------------
+# --------------------------------------------------------------- 
 # We will first focus on the buyers
 
 @database.route('/edit-buyer-info', methods = ['Get', 'Post'])
@@ -320,7 +328,7 @@ def edit_buyer_information():
     city = False
     state = False
     zipcode = False
-    cursor.execute("SELECT * FROM Buyer WHERE email = ?", (current_user,))
+    cursor.execute("SELECT * FROM Buyers WHERE email = ?", (current_user,))
     rows = cursor.fetchone()
     if rows:
         address_id = rows[2]
@@ -342,6 +350,10 @@ def edit_buyer_information():
 
 
     return render_template('edit-buyer-info.html', result = result)
+
+@database.route('/Buyer_Homepage', methods = ["Get", "Post"])
+def buyerhompage():
+    return render_template("buyer.html")
 
 @database.route('/Update-Buyer-Information', methods = ["Get", "Post"])
 def Update_Buyer_Information():
@@ -406,6 +418,122 @@ def Update_Buyer_Information():
             conn.commit()
 
     return render_template("buyerinfoupdated.html")
+
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# SELLER SECTION
+
+@database.route('/edit-seller-info', methods = ['Get', 'Post'])
+def edit_seller_information():
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    result = False
+    address_id = False
+    bus_name = False
+    address = False
+    city = False
+    state = False
+    zipcode = False
+    # email,business_name,Business_Address_ID,bank_routing_number,bank_account_number
+    cursor.execute("SELECT * FROM Sellers WHERE email = ?", (current_user,))
+    rows = cursor.fetchone()
+    if rows:
+        address_id = rows[2]
+        bus_name = rows[1]
+
+        cursor.execute("SELECT * FROM Address WHERE address_id = ?", (address_id,) )
+        addy_row = cursor.fetchone()
+
+        if addy_row:
+            address = addy_row[2]
+            city = addy_row[3]
+            state = addy_row[4]
+            zipcode = addy_row[1]
+
+            result = [bus_name, address, city, state, zipcode]
+
+    # Add in preview of information prior to change
+    # Only display the relevant info -- the business name and address
+
+
+    return render_template('edit-seller-info.html', result = result)
+
+@database.route('/Seller_Homepage', methods = ["Get", "Post"])
+def sellerhompage():
+    return render_template("seller.html")
+
+@database.route('/Update-Seller-Information', methods = ["Get", "Post"])
+def Update_Seller_Information():
+    # The only information that users will be able to edit here will be:
+    # Business Name, Address, City, State, 
+    db_file = 'database.db'
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    user = current_user
+    business_name = False
+    Address = False
+    City = False
+    State = False
+    Zipcode = False
+
+    if request.form.get("business-name"):
+        business_name = request.form.get("business-name")
+
+    if request.form.get("address"):
+        Address = request.form.get("address")
+
+    if request.form.get("city"):
+        City = request.form.get("city")
+    
+    if request.form.get("state"):
+        State = request.form.get("state")
+    
+    if request.form.get("zipcode"):
+        Zipcode = request.form.get("zipcode")
+
+    # cursor.execute(f"INSERT INTO Buyer (email, password) VALUES ('{username}', '{hashed_password}')") # add username into Users and Buyers tables
+    cursor.execute("SELECT * FROM Sellers WHERE email = ?", (user,))
+    rows = cursor.fetchall()
+    row = rows[0]
+    Address_id = row[2]
+
+    
+    # Consider making two forms 
+    # so we know whether we are updating the
+    # address or business name 
+    if business_name:
+        cursor.execute("UPDATE Sellers SET business_name = ? WHERE email = ?", (business_name, current_user,))
+        conn.commit()
+    if Address:
+
+        # Update the address
+        # CONSIDER ALL EDGE CASES
+        if City:
+            if State:
+                if Zipcode:
+                    cursor.execute("UPDATE Address SET zipcode = ?,address = ?,city = ?,state = ?",(Zipcode,Address,City,State,))
+                    conn.commit()
+                else:
+                    cursor.execute("UPDATE Address SET address = ?,city = ?,state = ?",(Address,City,State,))
+                    conn.commit()
+            else:
+                cursor.execute("UPDATE Address SET zipcode = ?,address = ?,city = ?",(Zipcode,Address,City,))
+                conn.commit()
+        else:
+            cursor.execute("UPDATE Address SET zipcode = ?,address = ?,city = ?,state = ?",(Zipcode,Address,City,State,))
+            conn.commit()
+
+    return render_template("Sellerinfoupdated.html")
+
+
 
 
 @database.route('/create-product', methods = ['Get', 'Post'])
